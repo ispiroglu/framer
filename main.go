@@ -45,29 +45,29 @@ func main() {
 	}
 
 	wg := sync.WaitGroup{}
-	wg.Add(len(categories))
 
 	for _, category := range categories {
-		pool.Submit(func() {
-			categoryPath := filepath.Join(inputPathAbs, category.Name())
-			categoryPath, err = filepath.Abs(categoryPath)
-			if err != nil {
-				panic(err)
-			}
+		categoryPath := filepath.Join(inputPathAbs, category.Name())
+		categoryPath, err = filepath.Abs(categoryPath)
+		if err != nil {
+			panic(err)
+		}
 
-			images, err := os.ReadDir(categoryPath)
-			if err != nil {
-				panic(err)
-			}
+		images, err := os.ReadDir(categoryPath)
+		if err != nil {
+			panic(err)
+		}
 
-			for _, image := range images {
-				imageInputPath := filepath.Join(categoryPath, image.Name())
-				imageOutputPath := filepath.Join(outputPathAbs, category.Name())
+		for _, image := range images {
+			wg.Add(1)
+			imageInputPath := filepath.Join(categoryPath, image.Name())
+			imageOutputPath := filepath.Join(outputPathAbs, category.Name())
+
+			pool.Submit(func() {
 				processImage(image, imageInputPath, imageOutputPath)
-			}
-
-			wg.Done()
-		})
+				wg.Done()
+			})
+		}
 	}
 
 	wg.Wait()
