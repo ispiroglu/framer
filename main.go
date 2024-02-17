@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"image/png"
@@ -29,53 +28,46 @@ type imgType struct {
 }
 
 func main() {
-
 	cpu := runtime.GOMAXPROCS(0)
-	fmt.Printf("cpu: %v\n", cpu)
-
 	pool, _ := ants.NewPool(cpu)
-	inputPathAbs, err := filepath.Abs(inputPath)
-	if err != nil {
-		panic(err)
-	}
 
-	files, err := os.ReadDir(inputPathAbs)
+	//exePath, _ := os.Executable()
+	//exeDir := filepath.Dir(exePath)
+	//inputPathAbs := filepath.Join(exeDir, inputPath)
+	//outputPathAbs := filepath.Join(exeDir, outputPath)
+
+	inputPathAbs := "input"
+	outputPathAbs := "output"
+
+	categories, err := os.ReadDir(inputPathAbs)
 	if err != nil {
-		fmt.Print("asd")
 		panic(err)
 	}
 
 	wg := sync.WaitGroup{}
-	wg.Add(len(files))
+	wg.Add(len(categories))
 
-	for _, file := range files {
+	for _, category := range categories {
 		pool.Submit(func() {
-			fullPath := filepath.Join(inputPath, file.Name())
-			fullPath, err = filepath.Abs(fullPath)
+			categoryPath := filepath.Join(inputPathAbs, category.Name())
+			categoryPath, err = filepath.Abs(categoryPath)
 			if err != nil {
 				panic(err)
 			}
 
-			imgFile, err := os.Open(fullPath)
+			images, err := os.ReadDir(categoryPath)
 			if err != nil {
 				panic(err)
 			}
 
-			img, _, err := image.Decode(imgFile)
-			if err != nil {
-				panic(err)
+			for _, image := range images {
+				imageInputPath := filepath.Join(categoryPath, image.Name())
+				imageOutputPath := filepath.Join(outputPathAbs, category.Name())
+				processImage(image, imageInputPath, imageOutputPath)
 			}
-
-			resizedImage := calculateDimensions(img)
-			placedImage := placeImageToA3(resizedImage)
-			saveImage(imgType{
-				Image: placedImage,
-				name:  file.Name(),
-			})
 
 			wg.Done()
 		})
-
 	}
 
 	wg.Wait()
@@ -105,9 +97,6 @@ func calculateDimensions(img image.Image) image.Image {
 		newWidth = A3Width - 2*Padding
 	}
 
-	fmt.Printf("newHeight: %v\n", newHeight)
-	fmt.Printf("newWidth: %v\n", newWidth)
-
 	return imaging.Resize(img, newWidth, newHeight, imaging.Lanczos)
 }
 
@@ -133,12 +122,38 @@ func placeImageToA3(img image.Image) image.Image {
 	return a3
 }
 
-func saveImage(img imgType) {
-	out, err := os.Create(filepath.Join(outputPath, img.name))
+func saveImage(img imgType, path string) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		err := os.MkdirAll(path, 0755)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	out, err := os.Create(filepath.Join(path, img.name))
 	if err != nil {
 		panic(err)
 	}
 	defer out.Close()
 
 	png.Encode(out, img.Image)
+}
+
+func processImage(file os.DirEntry, fullPath, outputPathAbs string) {
+	imgFile, err := os.Open(fullPath)
+	if err != nil {
+		panic(err)
+	}
+
+	img, _, err := image.Decode(imgFile)
+	if err != nil {
+		panic(err)
+	}
+
+	resizedImage := calculateDimensions(img)
+	placedImage := placeImageToA3(resizedImage)
+	saveImage(imgType{
+		Image: placedImage,
+		name:  file.Name(),
+	}, outputPathAbs)
 }
