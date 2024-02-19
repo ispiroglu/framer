@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        padding: 50px;
+    }
+    form {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.1);
+        width: 300px;
+        margin: 0 auto;
+    }
+    input[type="number"] {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+    button {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    button:hover {
+        background-color: #45a049;
+    }
+    .note {
+        font-size: 0.8em;
+        color: #888;
+        margin-top: 20px;
+    }
+</style>
+</head>
+<body>
+<form action="/process" method="post">
+  <label for="height">Yükseklik:</label><br>
+    <input type="number" name="height" value="420">
+    <label for="width">Genişlik:</label><br>
+    <input type="number" name="width" value="297">
+    <label for="padding">Pasparto:</label><br>
+    <input type="number" name="padding" value="30">
+    <p class="note">Tüm değerler milimetre cinsindendir.</p>
+    <button type="submit">Başlat</button>
+</form>
+</body>
+</html>
